@@ -1,0 +1,80 @@
+/* You can add global styles to this file, and also import other style files */
+.amount-buttons-wrapper-details {
+	display: grid;
+	grid-template-columns: 2fr 1fr 2fr 5fr;
+	grid-column: 4;
+	justify-self: center;
+	align-self: center;
+}
+
+.grid-items {
+	align-self: center;
+}
+
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; } 
+
+.grid-list-items {
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr 2fr 1fr;
+}
+
+.productname-item {
+	grid-column: 1;
+	justify-self: start;
+}
+
+.price-item {
+	grid-column: 2;
+	justify-self: center;
+}
+
+.available-item {
+    grid-column: 3;
+    justify-self: center;
+}
+
+.amount-buttons-wrapper {
+    grid-column: 3;
+	display: grid;
+	grid-template-columns: 2fr 1fr 2fr;
+	justify-self: center;
+	align-self: center;
+}
+
+.minus-amount-button {
+	grid-column: 1;
+	background-color: #FF9900;
+}
+
+.amount-item {
+	grid-column: 2;
+	justify-self: center;
+}
+
+.plus-amount-button {
+	grid-column: 3;
+	background-color: #FF9900;
+}
+
+.buy-button {
+    grid-column: 5;
+    max-width: 50px;
+	margin-left: 10px;
+}
+
+.usernameField {
+	grid-column: 4;
+}
+
+.grid-list-items-order {
+	display: grid;
+	grid-template-columns: 3fr 4fr 1fr;
+}
+
+.product-info {
+	grid-column: 2;
+}
+
+.delete-button {
+	grid-column: 3;
+}
