@@ -24,26 +24,40 @@ app.Run();
 // Add service to container
 void ConfigureServices(IServiceCollection services, IConfiguration configuration, IHostEnvironment env) {
 
+  var meters = new OtelMetrics(SERVICE_NAME);
+  
   builder.Services.AddControllers(options => options.ReturnHttpNotAcceptable = true)
     .AddNewtonsoftJson();
 
   services.AddSingleton<IConnectionFactory, DefaultConnectionFactory>(x => (DefaultConnectionFactory)DefaultConnectionFactory.FromConfiguration("inventoryConnection"));
   services.AddSingleton<IInventoryDao, AdoInventoryDao>();
   services.AddSingleton<IInventoryLogic, InventoryLogic>();
+  services.AddSingleton(meters);
 
   #region OpenTelemetrySetup
 
-  services.AddOpenTelemetryTracing(tracerProviderBuilder => {
-    tracerProviderBuilder
-      .AddJaegerExporter()
-      .AddSource(SERVICE_NAME)
-      .SetResourceBuilder(
-        ResourceBuilder.CreateDefault()
-          .AddService(serviceName: SERVICE_NAME, serviceVersion: "1.0.0"))
-      .AddHttpClientInstrumentation()
-      .AddAspNetCoreInstrumentation()
-      .AddNpgsql();
-  });
+  services.AddOpenTelemetry()
+    .WithTracing(tracerProviderBuilder => {
+      tracerProviderBuilder 
+        .SetResourceBuilder(
+          ResourceBuilder.CreateDefault()
+            .AddService(serviceName: SERVICE_NAME, serviceVersion: "1.0.0"))
+        .AddHttpClientInstrumentation()
+        .AddSource(SERVICE_NAME)
+        .AddAspNetCoreInstrumentation()
+        .AddNpgsql()
+        .AddJaegerExporter();
+    })
+    .WithMetrics(metricBuilder => {
+      metricBuilder
+        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(SERVICE_NAME))
+        .AddHttpClientInstrumentation()
+        .AddAspNetCoreInstrumentation()
+        .AddMeter(meters.meterName)
+        .AddRuntimeInstrumentation()
+        .AddPrometheusExporter();
+    })
+    .StartWithHost();
 
   #endregion
   
@@ -58,7 +72,8 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
 
 // Configure the HTTP request pipeline.
 void ConfigureMiddleware(IApplicationBuilder app, IHostEnvironment env) {
-
+  app.UseOpenTelemetryPrometheusScrapingEndpoint(context => context.Connection.LocalPort == 1234);
+  
   app.UseCors();
   
   app.UseAuthorization();

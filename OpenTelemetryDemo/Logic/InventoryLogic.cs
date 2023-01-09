@@ -6,9 +6,11 @@ namespace Logic;
 
 public class InventoryLogic : IInventoryLogic {
   private readonly IInventoryDao inventoryDao;
+  private OtelMetrics meter;
   
-  public InventoryLogic(IInventoryDao inventoryDao) {
+  public InventoryLogic(IInventoryDao inventoryDao, OtelMetrics meter) {
     this.inventoryDao = inventoryDao;
+    this.meter = meter;
   }
   
   public async Task<bool> VerifyItem(int productId, int quantity) {
@@ -34,6 +36,10 @@ public class InventoryLogic : IInventoryLogic {
     var product = await inventoryDao.GetProduct(productId);
     if (product is not null) {
       if (product.AvailableQuantity >= quantity) {
+        
+        meter.DecrementTotalInventory(quantity);
+        meter.UpdateProduct();
+        
         product.AvailableQuantity -= quantity;
         await inventoryDao.UpdateProduct(product);
         return true;

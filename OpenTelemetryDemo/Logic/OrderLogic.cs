@@ -10,10 +10,12 @@ namespace Logic;
 
 public class OrderLogic : IOrderLogic {
   private readonly IOrderDao orderDao;
+  private OtelMetrics meter;
   private const string URL = "https://localhost:7153/";
-  
-  public OrderLogic(IOrderDao orderDao) {
+
+  public OrderLogic(IOrderDao orderDao, OtelMetrics meter) {
     this.orderDao = orderDao;
+    this.meter = meter;
   }
   
   public async Task<bool> CreateOrderAsync(Order order) {
@@ -25,6 +27,10 @@ public class OrderLogic : IOrderLogic {
       order.Total = product.Price * order.Quantity;
       order.Product = product;
       await orderDao.CreateOrder(order);
+      
+      meter.RecordNumberOfFilms(order.Quantity);
+      meter.RecordOrderPrice(order.Total);
+      meter.IncrementTotalOrders();
       
       return prevId != order.Id;
     }
@@ -54,6 +60,7 @@ public class OrderLogic : IOrderLogic {
   }
   
   public async Task<bool> DeleteOrder(int id) {
+    meter.DecrementTotalOrders();
     return await orderDao.DeleteOrder(id);
   }
 

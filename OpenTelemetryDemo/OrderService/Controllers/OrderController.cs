@@ -12,7 +12,7 @@ namespace OpenTelemetryDemo.Controllers;
 [ApiConventionType(typeof(WebApiConventions))]
 public class OrderController : ControllerBase {
   private readonly IOrderLogic logic;
-  
+
   public OrderController(IOrderLogic logic) {
     this.logic = logic;
   }
