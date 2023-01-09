@@ -1,0 +1,24 @@
+<form class="ui large form" [formGroup]="getOrderForm">
+    <input name="idinput" formControlName="idinput" placeholder="Order ID">
+</form>
+<button mat-raised-button color="primary" (click)="Submit()" [disabled]="getOrderForm.invalid">Get Order</button>
+
+<div *ngIf="error" class="ui negative message">
+    <div>{{ error.status }}</div>
+    <div>{{ error.title }}</div>
+</div>
+  
+
+<div class="grid-list-items-order" *ngIf="!error">
+    <div>
+        <div class="header productname-item grid-items">Order ID: {{ order.id }} ordered by {{ order.username }} at {{ date() }}</div>
+        <div class="price-item grid-items">Price: {{ order.total }}€</div>
+    </div>
+    
+    <div class="product-info">
+       <div class="header">{{order.product?.name}}</div>
+       <div>Quantity: {{ order.quantity }}</div>
+    </div>
+
+    <button class="delete-button" mat-raised-button color="warn" (click)="deleteOrder()">Delete Order</button>
+</div>

@@ -1,0 +1,20 @@
+<div class="grid-list-items">
+<div>
+    <div class="header productname-item grid-items">{{ product.name }}</div>
+    <div class="price-itemgrid-items">Price: {{ product.price }}€</div>
+    <div class="available-item grid-items">Available Quantity: {{ product.availableQuantity }}</div>
+</div>
+
+<div class="amount-buttons-wrapper">
+    <button mat-fab (click)="decrement()" class="minus-amount-button grid-items" style="justify-self: center;"><i class="minus icon"></i></button>
+    <div class="amount-item grid-items">{{ amount }}</div>
+    <button mat-fab (click)="increment()" class="plus-amount-button grid-items" style="justify-self: center;"><i class="plus icon"></i></button>
+</div>
+
+<div class="usernameField grid-items">
+    <form class="ui large form" [formGroup]="userForm">
+        <input name="username" formControlName="username" placeholder="username">
+    </form>
+  </div>
+<button (click)="createOrder()" mat-raised-button color="primary" class="grid-items buy-button" [disabled]="userForm.invalid">Buy</button>
+</div>

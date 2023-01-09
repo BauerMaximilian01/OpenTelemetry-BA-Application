@@ -1,0 +1,22 @@
+<!-- <div class="grid-list-items">
+    <div class="header grid-items">Order ID: {{ order.id }} ordered by {{ order.username }} at {{ date() }}</div>
+    <div class="header productname-item grid-items">Product Name: {{ order.product?.name }}</div>
+    <div class="header grid-items">Quantity: {{ order.quantity }}</div>
+    <div class="description grid-items">Total: {{ order.total }}€</div>
+</div>
+ -->
+
+<div class="grid-list-items-order">
+    <div>
+        <div class="header productname-item grid-items">Order ID: {{ order.id }} ordered by {{ order.username }} at {{ date() }}</div>
+        <div class="price-item grid-items">Price: {{ order.total }}€</div>
+    </div>
+    
+    <div class="product-info">
+       <div class="header">{{order.product?.name}}</div>
+       <div>Quantity: {{ order.quantity }}</div>
+    </div>
+
+    <button class="delete-button" mat-raised-button color="warn" (click)="deleteOrder()">Delete Order</button>
+</div>
+    
