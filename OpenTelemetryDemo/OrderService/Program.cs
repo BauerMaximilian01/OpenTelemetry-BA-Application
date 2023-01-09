@@ -1,13 +1,8 @@
-using System.Diagnostics.Metrics;
 using Dal.Ado;
 using Dal.Common;
 using Logic;
-using Npgsql;
-using OpenTelemetry;
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
-using OpenTelemetry.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using Prometheus;
 
 const string SERVICE_NAME = "OrderService";
 
@@ -26,40 +21,15 @@ app.Run();
 // Add service to container
 void ConfigureServices(IServiceCollection services, IConfiguration configuration, IHostEnvironment env) {
 
+  var metrics = new PrometheusMetrics();
+  
   builder.Services.AddControllers(options => options.ReturnHttpNotAcceptable = true)
     .AddNewtonsoftJson();
 
   services.AddSingleton<IConnectionFactory, DefaultConnectionFactory>(x => (DefaultConnectionFactory)DefaultConnectionFactory.FromConfiguration("orderConnection"));
   services.AddSingleton<IOrderDao, AdoOrderDao>();
   services.AddSingleton<IOrderLogic, OrderLogic>();
-
-  #region OpenTelemetrySetup
-
-  services.AddOpenTelemetry()
-    .WithTracing(tracerProviderBuilder => {
-      tracerProviderBuilder
-        .AddJaegerExporter()
-        .AddSource(SERVICE_NAME)
-        .SetResourceBuilder(
-          ResourceBuilder.CreateDefault()
-            .AddService(serviceName: SERVICE_NAME))
-        .AddHttpClientInstrumentation()
-        .AddAspNetCoreInstrumentation()
-        .AddNpgsql();
-    });
-  
-  services.AddOpenTelemetry()
-    .WithMetrics(builder => {
-      builder
-        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(SERVICE_NAME))
-        .AddHttpClientInstrumentation()
-        .AddAspNetCoreInstrumentation()
-        .AddRuntimeInstrumentation()
-        .AddPrometheusExporter();
-    });
-
-    
-    #endregion
+  services.AddSingleton(metrics);
 
   services.AddAuthorization();
 
@@ -74,9 +44,16 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
 void ConfigureMiddleware(IApplicationBuilder app, IHostEnvironment env) {
   app.UseCors();
 
+  #region PrometheusInstrumentation
+  
+  app.UseHttpMetrics();
+  app.UseMetricServer();
+  
+  #endregion
+
   app.UseHttpsRedirection();
   app.UseAuthorization();
-  
+
   app.UseOpenApi();
   app.UseSwaggerUi3(settings => settings.Path = "/swagger/order");
 }

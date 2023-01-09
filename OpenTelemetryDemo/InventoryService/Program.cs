@@ -1,12 +1,8 @@
 using Dal.Ado;
 using Dal.Common;
-using InventoryService.Controllers;
 using Logic;
-using Npgsql;
-using OpenTelemetry;
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
+using Prometheus;
+
 
 const string SERVICE_NAME = "InventoryService";
 
@@ -24,29 +20,16 @@ app.Run();
 // Add service to container
 void ConfigureServices(IServiceCollection services, IConfiguration configuration, IHostEnvironment env) {
 
+  var metrics = new PrometheusMetrics();
+  
   builder.Services.AddControllers(options => options.ReturnHttpNotAcceptable = true)
     .AddNewtonsoftJson();
 
   services.AddSingleton<IConnectionFactory, DefaultConnectionFactory>(x => (DefaultConnectionFactory)DefaultConnectionFactory.FromConfiguration("inventoryConnection"));
   services.AddSingleton<IInventoryDao, AdoInventoryDao>();
   services.AddSingleton<IInventoryLogic, InventoryLogic>();
+  services.AddSingleton(metrics);
 
-  #region OpenTelemetrySetup
-
-  services.AddOpenTelemetryTracing(tracerProviderBuilder => {
-    tracerProviderBuilder
-      .AddJaegerExporter()
-      .AddSource(SERVICE_NAME)
-      .SetResourceBuilder(
-        ResourceBuilder.CreateDefault()
-          .AddService(serviceName: SERVICE_NAME, serviceVersion: "1.0.0"))
-      .AddHttpClientInstrumentation()
-      .AddAspNetCoreInstrumentation()
-      .AddNpgsql();
-  });
-
-  #endregion
-  
   services.AddAuthorization();
 
   services.AddRouting(options => options.LowercaseUrls = true);
@@ -60,6 +43,13 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
 void ConfigureMiddleware(IApplicationBuilder app, IHostEnvironment env) {
 
   app.UseCors();
+  
+  #region PrometheusInstrumentation
+  
+  app.UseHttpMetrics();
+  app.UseMetricServer();
+  
+  #endregion
   
   app.UseAuthorization();
   

@@ -12,9 +12,11 @@ namespace OpenTelemetryDemo.Controllers;
 [ApiConventionType(typeof(WebApiConventions))]
 public class OrderController : ControllerBase {
   private readonly IOrderLogic logic;
+  private PrometheusMetrics metrics;
   
-  public OrderController(IOrderLogic logic) {
+  public OrderController(IOrderLogic logic, PrometheusMetrics metrics) {
     this.logic = logic;
+    this.metrics = metrics;
   }
 
   [HttpGet("/orders")]
@@ -38,6 +40,11 @@ public class OrderController : ControllerBase {
       var result = await logic.GetOrderById(order.Id);
 
       if (result is not null) {
+        metrics.TotalOrdersInc();
+        
+        metrics.OrdersPriceHistogram.Observe(order.Total);
+        metrics.NumberOfFilmsPerOrder.Observe(order.Quantity);
+        
         return CreatedAtAction(
           actionName: nameof(GetOrder),
           routeValues: new { orderId = result.Id },
@@ -52,6 +59,7 @@ public class OrderController : ControllerBase {
   [HttpDelete("/orders/{orderId}")]
   public async Task<ActionResult<bool>> DeleteOrder(int orderId) {
     if (await logic.DeleteOrder(orderId)) {
+      metrics.TotalOrdersDec();
       return NoContent();
     }
     
