@@ -1,6 +1,12 @@
 using Dal.Ado;
 using Dal.Common;
+using Jaeger;
+using Jaeger.Reporters;
+using Jaeger.Samplers;
+using Jaeger.Senders.Thrift;
 using Logic;
+using OpenTracing;
+using OpenTracing.Util;
 using Prometheus;
 
 
@@ -30,6 +36,27 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
   services.AddSingleton<IInventoryLogic, InventoryLogic>();
   services.AddSingleton(metrics);
 
+  #region InstrumentationTracing
+
+  services.AddSingleton(provider => {
+
+    var reporter = new RemoteReporter.Builder()
+      .WithSender(new HttpSender("http://localhost:14268/api/traces"))
+      .Build();
+    
+    ITracer tracer = new Tracer.Builder(SERVICE_NAME)
+      .WithReporter(reporter)
+      .Build();
+
+    GlobalTracer.Register(tracer);
+
+    return tracer;
+  });
+
+
+  services.AddOpenTracing();
+  #endregion
+  
   services.AddAuthorization();
 
   services.AddRouting(options => options.LowercaseUrls = true);
@@ -44,7 +71,7 @@ void ConfigureMiddleware(IApplicationBuilder app, IHostEnvironment env) {
 
   app.UseCors();
   
-  #region PrometheusInstrumentation
+  #region InstrumentationMetrics
   
   app.UseHttpMetrics();
   app.UseMetricServer();
