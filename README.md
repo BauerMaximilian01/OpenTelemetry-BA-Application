@@ -1,5 +1,5 @@
 # OpenTelemetry-BA-Application
-Short ASP.NETCore application with an Angular Frontend to show the Functionality of OpenTelemetry with Jaeger for Traces, Prometheus for Metrics and Grafana for Visualisation of Metrics.
+Short ASP.NETCore application with an Angular Frontend to show the Functionality of OpenTelemetry with Jaeger for Traces, Prometheus for Metrics and Grafana for visualization of Metrics.
 
 ## Getting Started
 Clone 
